@@ -1,13 +1,50 @@
-import { ObjectType, Field } from '@nestjs/graphql';
+import {
+  ObjectType,
+  InputType,
+  Field,
+  registerEnumType,
+} from '@nestjs/graphql';
+
+enum MangaStatus {
+  COMPLETED = 'completed',
+  READING = 'reading',
+  ABANDONED = 'abandoned',
+}
+
+registerEnumType(MangaStatus, { name: 'MangaStatus' });
 
 @ObjectType()
-export class UserLibrary {
+export class UserLibraryDTO {
   @Field()
   userId: string;
 
   @Field()
   mangaId: string;
 
+  @Field(() => MangaStatus)
+  status: MangaStatus;
+}
+
+@InputType()
+export class AddToLibraryInput {
   @Field()
-  status: string;
+  userId: string;
+
+  @Field()
+  mangaId: string;
+
+  @Field(() => MangaStatus)
+  status: MangaStatus;
+}
+
+@InputType()
+export class UpdateStatusInput {
+  @Field()
+  userId: string;
+
+  @Field()
+  mangaId: string;
+
+  @Field(() => MangaStatus)
+  status: MangaStatus;
 }
