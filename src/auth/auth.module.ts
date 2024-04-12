@@ -6,7 +6,7 @@ import { LocalStrategy } from './utils/local.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './utils/jwt.strategy';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserSchema } from '../users/user.model';
+import { UserSchema } from '../users/user.schema';
 
 @Module({
   imports: [
@@ -14,7 +14,7 @@ import { UserSchema } from '../users/user.model';
     PassportModule,
     JwtModule.register({
       secret: 'SECRET-KEY',
-      signOptions: { expiresIn: '1d' },
+      signOptions: { expiresIn: '3d' },
     }),
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy],
