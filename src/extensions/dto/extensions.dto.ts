@@ -50,10 +50,10 @@ export class GetMangaListInputType {
   @Field()
   extension: string;
 
-  @Field()
+  @Field({ nullable: true })
   limit: number;
 
-  @Field()
+  @Field({ nullable: true })
   offset: number;
 }
 
@@ -64,4 +64,19 @@ export class GetMangaByIdInputType {
 
   @Field()
   mangaId: string;
+}
+
+@InputType()
+export class SearchMangaInputType extends GetMangaListInputType {
+  @Field({ nullable: true })
+  title: string;
+
+  @Field({ nullable: true })
+  year: number;
+
+  @Field(() => [String], { nullable: true })
+  includedTags: string[];
+
+  @Field(() => [String], { nullable: true })
+  excludedTags: string[];
 }

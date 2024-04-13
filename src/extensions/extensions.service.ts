@@ -3,6 +3,7 @@ import {
   ChapterDTO,
   GetMangaListInputType,
   GetMangaByIdInputType,
+  SearchMangaInputType,
 } from './dto/extensions.dto';
 import { MangaDexService } from './manga-dex/manga-dex.service';
 import { MangaExtensionDTO } from './dto/extensions.dto';
@@ -30,5 +31,14 @@ export class ExtensionsService {
       return this.mangaDexService.getMangaById({ mangaId });
     }
     return this.mangaDexService.getMangaById({ mangaId });
+  }
+
+  searchManga(options: SearchMangaInputType): Observable<MangaExtensionDTO[]> {
+    const { extension, ...searchOptions } = options;
+
+    if (extension === 'MangaDex') {
+      return this.mangaDexService.searchManga(searchOptions);
+    }
+    return this.mangaDexService.searchManga(searchOptions);
   }
 }

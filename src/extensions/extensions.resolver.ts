@@ -6,6 +6,7 @@ import {
   ChapterDTO,
   GetMangaListInputType,
   GetMangaByIdInputType,
+  SearchMangaInputType,
 } from './dto/extensions.dto';
 import { ExtensionsService } from './extensions.service';
 
@@ -25,5 +26,12 @@ export class ExtensionsResolver {
     @Args('GetMangaByIdInputType') options: GetMangaByIdInputType,
   ): Observable<{ manga: MangaExtensionDTO; chapters: ChapterDTO[] }> {
     return this.extensionsService.getMangaById(options);
+  }
+
+  @Query(() => [MangaExtensionDTO])
+  searchManga(
+    @Args('SearchMangaInputType') options: SearchMangaInputType,
+  ): Observable<MangaExtensionDTO[]> {
+    return this.extensionsService.searchManga(options);
   }
 }
