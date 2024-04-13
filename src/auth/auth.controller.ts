@@ -9,12 +9,23 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Request() req): Promise<{ access_token: string }> {
-    return this.authService.login(req.user);
+  async login(
+    @Request() req,
+  ): Promise<{ access_token: string; userId: string; email: string }> {
+    const { access_token, userId, email } = await this.authService.login(
+      req.user,
+    );
+    return { access_token, userId, email };
   }
 
   @Post('register')
   async register(@Request() req): Promise<User> {
     return this.authService.register(req.body);
+  }
+
+  @Post('validateUser')
+  async validateUser(@Request() req): Promise<User | null> {
+    const { email, password } = req.body;
+    return this.authService.validateUser(email, password);
   }
 }

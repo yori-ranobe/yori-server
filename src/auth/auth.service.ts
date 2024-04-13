@@ -29,10 +29,19 @@ export class AuthService {
     return createdUser.save();
   }
 
-  async login(user: User): Promise<{ access_token: string }> {
+  async login(user: User): Promise<{
+    access_token: string;
+    userId: string;
+    email: string;
+    username: string;
+  }> {
     const payload = { email: user.email, sub: user._id };
+    const { username } = await this.userModel.findOne({ email: user.email });
     return {
       access_token: this.jwtService.sign(payload),
+      userId: user._id,
+      email: user.email,
+      username: username,
     };
   }
 }
