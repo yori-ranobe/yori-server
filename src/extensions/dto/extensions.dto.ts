@@ -19,6 +19,9 @@ export class MangaExtensionDTO {
 
   @Field()
   cover: string;
+
+  @Field(() => [TagDTO])
+  tags: TagDTO[];
 }
 
 @ObjectType()
@@ -43,6 +46,21 @@ export class ExtendedMangaDTO {
 
   @Field(() => [ChapterDTO])
   chapters: ChapterDTO[];
+}
+
+@ObjectType()
+export class TagDTO {
+  @Field()
+  id: string;
+
+  @Field()
+  type: string;
+
+  @Field()
+  name: string;
+
+  @Field()
+  group: string;
 }
 
 @InputType()

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { forkJoin, Observable, switchMap } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-import { ChapterDTO, MangaExtensionDTO } from '../dto/extensions.dto';
+import { ChapterDTO, MangaExtensionDTO, TagDTO } from '../dto/extensions.dto';
 import {
   GetMangaDexMangaListInputType,
   GetMangaDexMangaByIdInputType,
@@ -37,9 +37,10 @@ export class MangaDexService {
     return coverRelationship.attributes.fileName;
   }
 
-  mapMangaItemToDTO(item: any): MangaExtensionDTO {
+  private mapMangaItemToDTO(item: any): MangaExtensionDTO {
     const coverFileName = this.extractCoverFileName(item);
     const cover = `${EXTENSIONS.mangaDex.filesApi}/covers/${item.id}/${coverFileName}`;
+    const tagsDTO = item.attributes.tags.map((tag) => this.mapTagToDTO(tag));
 
     return {
       id: item.id,
@@ -48,15 +49,25 @@ export class MangaDexService {
       description: item.attributes.description?.en || '',
       year: item.attributes.year,
       cover: cover,
+      tags: tagsDTO,
     };
   }
 
-  mapChapterItemToDTO(chapterData: any): ChapterDTO {
+  private mapChapterItemToDTO(chapterData: any): ChapterDTO {
     return {
       id: chapterData.id,
       volume: chapterData.attributes.volume ?? null,
       chapter: chapterData.attributes.chapter,
       publishAt: new Date(chapterData.attributes.publishAt),
+    };
+  }
+
+  private mapTagToDTO(tag: any): TagDTO {
+    return {
+      id: tag.id,
+      type: tag.type,
+      name: tag.attributes.name.en || '',
+      group: tag.attributes.group || '',
     };
   }
 
@@ -119,8 +130,10 @@ export class MangaDexService {
     );
   }
 
-  private getTagIDs(tagIDs: string[], tagNames: string[] = []): string[] {
-    return tagIDs.filter((tagID) => tagNames.includes(tagID));
+  private getTagIDs(tagIDs: any[], tagNames: string[] = []): string[] {
+    return tagIDs
+      .filter((tagID) => tagNames.includes(tagID.attributes.name.en))
+      .map((tag) => tag.id);
   }
 
   private searchMangaData(
