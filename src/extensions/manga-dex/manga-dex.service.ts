@@ -1,12 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { forkJoin, Observable, switchMap } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
-import { ChapterDTO, MangaExtensionDTO, TagDTO } from '../dto/extensions.dto';
+import { Observable, forkJoin } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
+import {
+  ChapterDTO,
+  MangaExtensionDTO,
+  TagDTO,
+  ChapterImagesDTO,
+  ImagesTypeEnum,
+} from '../dto/extensions.dto';
 import {
   GetMangaDexMangaListInputType,
   GetMangaDexMangaByIdInputType,
   SearchMangaDexMangaInputType,
+  GetMangaDexChapterImagesInputType,
 } from './dto/manga-dex.dto';
 import { EXTENSIONS } from '../../config';
 
@@ -88,52 +95,62 @@ export class MangaDexService {
   getMangaById(
     options: GetMangaDexMangaByIdInputType,
   ): Observable<{ manga: MangaExtensionDTO; chapters: ChapterDTO[] }> {
-    const mangaRequest$ = this.makeRequest(
-      `/manga/${options.mangaId}?includes[]=cover_art`,
-      {},
-    );
-    const chaptersRequest$ = this.makeRequest(
-      `/manga/${options.mangaId}/feed`,
-      {},
-    );
-
-    return forkJoin({
-      mangaResponse: mangaRequest$,
-      chaptersResponse: chaptersRequest$,
-    }).pipe(
+    return this.getMangaData(options.mangaId).pipe(
       map(({ mangaResponse, chaptersResponse }) => {
-        const mangaItem = mangaResponse.data.data;
-        const manga = this.mapMangaItemToDTO(mangaItem);
-        const chaptersWithEnLanguage = chaptersResponse.data.data.filter(
-          (chapterData: any) =>
-            chapterData.attributes.translatedLanguage === 'en',
-        );
-        const chapters = chaptersWithEnLanguage.map((chapterData: any) =>
-          this.mapChapterItemToDTO(chapterData),
-        );
-        chapters.sort((a, b) =>
-          a.chapter.localeCompare(b.chapter, undefined, { numeric: true }),
+        const manga = this.mapMangaItemToDTO(mangaResponse.data.data);
+        const chapters = this.mapChaptersResponseToDTO(
+          chaptersResponse.data.data,
         );
         return { manga, chapters };
       }),
     );
   }
 
+  private getMangaData(mangaId: string): Observable<any> {
+    const mangaRequest$ = this.makeRequest(
+      `/manga/${mangaId}?includes[]=cover_art`,
+      {},
+    );
+    const chaptersRequest$ = this.makeRequest(`/manga/${mangaId}/feed`, {});
+    return forkJoin({
+      mangaResponse: mangaRequest$,
+      chaptersResponse: chaptersRequest$,
+    });
+  }
+
+  private mapChaptersResponseToDTO(chaptersData: any[]): ChapterDTO[] {
+    const chaptersWithEnLanguage = chaptersData.filter(
+      (chapterData: any) => chapterData.attributes.translatedLanguage === 'en',
+    );
+    return chaptersWithEnLanguage.map((chapterData: any) =>
+      this.mapChapterItemToDTO(chapterData),
+    );
+  }
+
   // *** SEARCH MANGA ***
 
-  private getTagData(): Observable<string[]> {
-    return this.makeRequest('/manga/tag', {}).pipe(
-      map((response: any) => response.data.data),
+  searchManga(
+    options: SearchMangaDexMangaInputType,
+  ): Observable<MangaExtensionDTO[]> {
+    return this.getTagData().pipe(
+      switchMap((tagIDs: string[]) => {
+        const { limit, offset, title, year, includedTags, excludedTags } =
+          options;
+        const includedTagIDs = this.getTagIDs(tagIDs, includedTags);
+        const excludedTagIDs = this.getTagIDs(tagIDs, excludedTags);
+        return this.searchMangaData(
+          limit,
+          offset,
+          title,
+          year,
+          includedTagIDs,
+          excludedTagIDs,
+        );
+      }),
       catchError((error) => {
         throw error;
       }),
     );
-  }
-
-  private getTagIDs(tagIDs: any[], tagNames: string[] = []): string[] {
-    return tagIDs
-      .filter((tagID) => tagNames.includes(tagID.attributes.name.en))
-      .map((tag) => tag.id);
   }
 
   private searchMangaData(
@@ -158,36 +175,47 @@ export class MangaDexService {
     );
   }
 
-  searchManga(
-    options: SearchMangaDexMangaInputType,
-  ): Observable<MangaExtensionDTO[]> {
-    const {
-      limit = 10,
-      offset = 0,
-      title = '',
-      year = null,
-      includedTags = [],
-      excludedTags = [],
-    } = options;
-
-    return this.getTagData().pipe(
-      switchMap((tagIDs: string[]) => {
-        const includedTagIDs = this.getTagIDs(tagIDs, includedTags);
-        const excludedTagIDs = this.getTagIDs(tagIDs, excludedTags);
-        return this.searchMangaData(
-          limit,
-          offset,
-          title,
-          year,
-          includedTagIDs,
-          excludedTagIDs,
-        );
-      }),
+  private getTagData(): Observable<string[]> {
+    return this.makeRequest('/manga/tag', {}).pipe(
+      map((response: any) => response.data.data),
       catchError((error) => {
         throw error;
       }),
     );
   }
 
-  // *** GET CHAPTERS IMAGES ***
+  private getTagIDs(tagIDs: any[], tagNames: string[] = []): string[] {
+    return tagIDs
+      .filter((tagID) => tagNames.includes(tagID.attributes.name.en))
+      .map((tag) => tag.id);
+  }
+
+  // *** GET CHAPTER IMAGES ***
+
+  getChapterImages(
+    options: GetMangaDexChapterImagesInputType,
+  ): Observable<ChapterImagesDTO> {
+    const { chapterId, imagesType } = options;
+
+    return this.makeRequest(`/at-home/server/${chapterId}`, {}).pipe(
+      map((response) => {
+        const baseUrl = response.data.baseUrl;
+        let images: string[];
+
+        if (imagesType === ImagesTypeEnum.COMPRESSED) {
+          images = response.data.chapter.dataSaver.map(
+            (image: string) =>
+              `${baseUrl}/data-saver/${response.data.chapter.hash}/${image}`,
+          );
+        } else {
+          images = response.data.chapter.data.map(
+            (image: string) =>
+              `${baseUrl}/data/${response.data.chapter.hash}/${image}`,
+          );
+        }
+
+        return { images };
+      }),
+    );
+  }
 }

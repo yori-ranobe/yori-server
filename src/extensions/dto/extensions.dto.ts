@@ -1,4 +1,18 @@
-import { Field, ObjectType, InputType } from '@nestjs/graphql';
+import {
+  Field,
+  ObjectType,
+  InputType,
+  registerEnumType,
+} from '@nestjs/graphql';
+
+export enum ImagesTypeEnum {
+  DEFAULT = 'DEFAULT',
+  COMPRESSED = 'COMPRESSED',
+}
+
+registerEnumType(ImagesTypeEnum, {
+  name: 'ImagesTypeEnum',
+});
 
 @ObjectType()
 export class MangaExtensionDTO {
@@ -63,6 +77,12 @@ export class TagDTO {
   group: string;
 }
 
+@ObjectType()
+export class ChapterImagesDTO {
+  @Field(() => [String])
+  images: string[];
+}
+
 @InputType()
 export class GetMangaListInputType {
   @Field()
@@ -97,4 +117,16 @@ export class SearchMangaInputType extends GetMangaListInputType {
 
   @Field(() => [String], { nullable: true })
   excludedTags: string[];
+}
+
+@InputType()
+export class GetChapterImagesInputType {
+  @Field()
+  extension: string;
+
+  @Field()
+  chapterId: string;
+
+  @Field(() => ImagesTypeEnum, { defaultValue: 'DEFAULT' })
+  imagesType: ImagesTypeEnum;
 }

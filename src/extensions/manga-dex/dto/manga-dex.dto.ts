@@ -1,4 +1,8 @@
-import { Field, InputType } from '@nestjs/graphql';
+import { Field, InputType, OmitType } from '@nestjs/graphql';
+import {
+  GetMangaByIdInputType,
+  GetChapterImagesInputType,
+} from '../../dto/extensions.dto';
 
 @InputType()
 export class GetMangaDexMangaListInputType {
@@ -10,10 +14,10 @@ export class GetMangaDexMangaListInputType {
 }
 
 @InputType()
-export class GetMangaDexMangaByIdInputType {
-  @Field()
-  mangaId: string;
-}
+export class GetMangaDexMangaByIdInputType extends OmitType(
+  GetMangaByIdInputType,
+  ['extension'],
+) {}
 
 @InputType()
 export class SearchMangaDexMangaInputType extends GetMangaDexMangaListInputType {
@@ -29,3 +33,9 @@ export class SearchMangaDexMangaInputType extends GetMangaDexMangaListInputType 
   @Field(() => [String], { nullable: true })
   excludedTags: string[];
 }
+
+@InputType()
+export class GetMangaDexChapterImagesInputType extends OmitType(
+  GetChapterImagesInputType,
+  ['extension'],
+) {}

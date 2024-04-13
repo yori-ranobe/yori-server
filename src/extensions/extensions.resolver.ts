@@ -4,9 +4,11 @@ import {
   MangaExtensionDTO,
   ExtendedMangaDTO,
   ChapterDTO,
+  ChapterImagesDTO,
   GetMangaListInputType,
   GetMangaByIdInputType,
   SearchMangaInputType,
+  GetChapterImagesInputType,
 } from './dto/extensions.dto';
 import { ExtensionsService } from './extensions.service';
 
@@ -33,5 +35,12 @@ export class ExtensionsResolver {
     @Args('SearchMangaInputType') options: SearchMangaInputType,
   ): Observable<MangaExtensionDTO[]> {
     return this.extensionsService.searchManga(options);
+  }
+
+  @Query(() => ChapterImagesDTO)
+  getChapterImages(
+    @Args('GetChapterImagesInputType') options: GetChapterImagesInputType,
+  ): Observable<ChapterImagesDTO> {
+    return this.extensionsService.getChapterImages(options);
   }
 }
