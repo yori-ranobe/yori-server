@@ -1,24 +1,27 @@
 import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { UserLibraryService } from './user-library.service';
-import { UserLibrary } from './user-library.schema';
-import { AddToLibraryInput, UpdateStatusInput } from './dto/user-library.dto';
+import {
+  UserLibraryDTO,
+  AddToLibraryInput,
+  UpdateStatusInput,
+} from './dto/user-library.dto';
 
 @Resolver()
 export class UserLibraryResolver {
   constructor(private readonly userLibraryService: UserLibraryService) {}
 
-  @Mutation(() => UserLibrary)
+  @Mutation(() => UserLibraryDTO)
   async addToLibrary(
     @Args('input') input: AddToLibraryInput,
-  ): Promise<UserLibrary> {
+  ): Promise<UserLibraryDTO> {
     const { userId, mangaId, status } = input;
     return this.userLibraryService.addToLibrary(userId, mangaId, status);
   }
 
-  @Mutation(() => UserLibrary)
+  @Mutation(() => UserLibraryDTO)
   async updateStatus(
     @Args('input') input: UpdateStatusInput,
-  ): Promise<UserLibrary> {
+  ): Promise<UserLibraryDTO> {
     const { userId, mangaId, status } = input;
     return this.userLibraryService.updateStatus(userId, mangaId, status);
   }
@@ -32,8 +35,8 @@ export class UserLibraryResolver {
     return true;
   }
 
-  @Query(() => [UserLibrary])
-  async getLibrary(@Args('userId') userId: string): Promise<UserLibrary[]> {
+  @Query(() => [UserLibraryDTO])
+  async getLibrary(@Args('userId') userId: string): Promise<UserLibraryDTO[]> {
     return this.userLibraryService.getLibrary(userId);
   }
 }

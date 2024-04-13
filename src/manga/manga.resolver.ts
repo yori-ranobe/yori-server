@@ -17,7 +17,9 @@ export class MangaResolver {
   constructor(private mangaService: MangaService) {}
 
   @Query(() => [MangaDTO])
-  fetchManga(@Args('options') options: FetchMangaOptions): Observable<MangaDTO[]> {
+  fetchManga(
+    @Args('options') options: FetchMangaOptions,
+  ): Observable<MangaDTO[]> {
     return this.mangaService.fetchManga(options);
   }
 

@@ -12,4 +12,4 @@ import { ReadingHistoryService } from './reading-history.service';
   ],
   providers: [ReadingHistoryResolver, ReadingHistoryService],
 })
-export class UserLibraryModule {}
+export class ReadingHistoryModule {}

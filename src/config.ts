@@ -12,3 +12,11 @@ export const MANGA_API = {
   url: MANGA_BASE_URL,
   headers: MANGA_HEADERS,
 };
+
+export const EXTENSIONS = {
+  mangaDex: {
+    apiUrl: 'https://api.mangadex.org',
+    filesApi: 'https://uploads.mangadex.org',
+    userAgent: 'personal-client-a38258a3-e5b0-4764-9c33-d9924b19e7bb-5c2a39d0',
+  },
+};
