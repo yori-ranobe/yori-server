@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { HealthModule } from './health/health.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './users/user.module';
 import { MangaModule } from './manga/manga.module';
@@ -23,6 +24,7 @@ import { ExtensionsModule } from './extensions/extensions.module';
         uri: configService.get<string>('MONGO_URL'),
       }),
     }),
+    HealthModule,
     AuthModule,
     UserModule,
     MangaModule,

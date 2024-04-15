@@ -1,4 +1,11 @@
-import { Controller, Post, Request, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Request,
+  UseGuards,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './utils/local-auth.guard';
 import { User } from '../users/user.schema';
@@ -12,20 +19,49 @@ export class AuthController {
   async login(
     @Request() req,
   ): Promise<{ access_token: string; userId: string; email: string }> {
-    const { access_token, userId, email } = await this.authService.login(
-      req.user,
-    );
-    return { access_token, userId, email };
+    try {
+      const { access_token, userId, email } = await this.authService.login(
+        req.body,
+      );
+      return { access_token, userId, email };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
+    }
   }
 
   @Post('register')
-  async register(@Request() req): Promise<User> {
-    return this.authService.register(req.body);
+  async register(@Request() req): Promise<{
+    access_token: string;
+    userId: string;
+    email: string;
+    username: string;
+  }> {
+    try {
+      const { access_token, userId, email, username } =
+        await this.authService.register(req.body);
+      return { access_token, userId, email, username };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Post('validateUser')
   async validateUser(@Request() req): Promise<User | null> {
-    const { email, password } = req.body;
-    return this.authService.validateUser(email, password);
+    try {
+      const { email, password } = req.body;
+      return await this.authService.validateUser(email, password);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
+    }
+  }
+
+  @Post('validateUserByToken')
+  async validateUserByToken(@Request() req): Promise<User | null> {
+    try {
+      const { token } = req.body;
+      return await this.authService.validateUserByToken(token);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
+    }
   }
 }
