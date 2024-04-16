@@ -18,11 +18,11 @@ export class ExtensionsService {
   fetchMangaList(
     options: GetMangaListInputType,
   ): Observable<MangaExtensionDTO[]> {
-    const { limit, offset } = options;
-    if (options.extension === 'MangaDex') {
-      return this.mangaDexService.fetchMangaList({ limit, offset });
+    const { extension, ...fetchMangaOptions } = options;
+    if (extension === 'MangaDex') {
+      return this.mangaDexService.fetchMangaList(fetchMangaOptions);
     }
-    return this.mangaDexService.fetchMangaList({ limit, offset });
+    return this.mangaDexService.fetchMangaList(fetchMangaOptions);
   }
 
   getMangaById(

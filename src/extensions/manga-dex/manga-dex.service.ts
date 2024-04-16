@@ -52,8 +52,11 @@ export class MangaDexService {
     return {
       id: item.id,
       type: item.type,
-      title: item.attributes.title?.en || '',
-      description: item.attributes.description?.en || '',
+      title: item.attributes.title?.en || item.attributes.title['ja-ro'] || '',
+      description:
+        item.attributes.description?.en ||
+        item.attributes.description['ja-ro'] ||
+        '',
       year: item.attributes.year,
       cover: cover,
       tags: tagsDTO,

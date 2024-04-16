@@ -37,8 +37,8 @@ export class MangaExtensionDTO {
   @Field({ nullable: true })
   description?: string;
 
-  @Field()
-  year: number;
+  @Field({ nullable: true })
+  year?: number;
 
   @Field()
   cover: string;
@@ -128,7 +128,7 @@ export class GetMangaListInputType {
   offset: number;
 
   @Field(() => MangaOrderOptionsInput, { nullable: true })
-  options?: MangaOrderOptionsInput;
+  order?: MangaOrderOptionsInput;
 }
 
 @InputType()

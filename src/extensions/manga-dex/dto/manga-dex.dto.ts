@@ -14,7 +14,7 @@ export class GetMangaDexMangaListInputType {
   offset: number;
 
   @Field(() => MangaOrderOptionsInput, { nullable: true })
-  options?: MangaOrderOptionsInput;
+  order?: MangaOrderOptionsInput;
 }
 
 @InputType()
