@@ -5,10 +5,19 @@ import {
   registerEnumType,
 } from '@nestjs/graphql';
 
+export enum MangaOrderEnum {
+  ASC = 'asc',
+  DESC = 'desc',
+}
+
 export enum ImagesTypeEnum {
   DEFAULT = 'DEFAULT',
   COMPRESSED = 'COMPRESSED',
 }
+
+registerEnumType(MangaOrderEnum, {
+  name: 'MangaOrderEnum',
+});
 
 registerEnumType(ImagesTypeEnum, {
   name: 'ImagesTypeEnum',
@@ -84,6 +93,30 @@ export class ChapterImagesDTO {
 }
 
 @InputType()
+export class MangaOrderOptionsInput {
+  @Field(() => MangaOrderEnum, { nullable: true })
+  title?: MangaOrderEnum;
+
+  @Field(() => MangaOrderEnum, { nullable: true })
+  year?: MangaOrderEnum;
+
+  @Field(() => MangaOrderEnum, { nullable: true })
+  createdAt?: MangaOrderEnum;
+
+  @Field(() => MangaOrderEnum, { nullable: true })
+  updatedAt?: MangaOrderEnum;
+
+  @Field(() => MangaOrderEnum, { nullable: true })
+  latestUploadedChapter?: MangaOrderEnum;
+
+  @Field(() => MangaOrderEnum, { nullable: true })
+  followedCount?: MangaOrderEnum;
+
+  @Field(() => MangaOrderEnum, { nullable: true })
+  relevance?: MangaOrderEnum;
+}
+
+@InputType()
 export class GetMangaListInputType {
   @Field()
   extension: string;
@@ -93,6 +126,9 @@ export class GetMangaListInputType {
 
   @Field({ nullable: true })
   offset: number;
+
+  @Field(() => MangaOrderOptionsInput, { nullable: true })
+  options?: MangaOrderOptionsInput;
 }
 
 @InputType()

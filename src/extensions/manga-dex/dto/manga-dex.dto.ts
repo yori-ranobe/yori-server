@@ -2,6 +2,7 @@ import { Field, InputType, OmitType } from '@nestjs/graphql';
 import {
   GetMangaByIdInputType,
   GetChapterImagesInputType,
+  MangaOrderOptionsInput,
 } from '../../dto/extensions.dto';
 
 @InputType()
@@ -11,6 +12,9 @@ export class GetMangaDexMangaListInputType {
 
   @Field({ nullable: true })
   offset: number;
+
+  @Field(() => MangaOrderOptionsInput, { nullable: true })
+  options?: MangaOrderOptionsInput;
 }
 
 @InputType()
