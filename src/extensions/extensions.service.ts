@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Observable } from 'rxjs';
 import {
   ChapterDTO,
   GetMangaListInputType,
@@ -9,7 +10,6 @@ import {
 } from './dto/extensions.dto';
 import { MangaDexService } from './manga-dex/manga-dex.service';
 import { MangaExtensionDTO } from './dto/extensions.dto';
-import { Observable } from 'rxjs';
 
 @Injectable()
 export class ExtensionsService {

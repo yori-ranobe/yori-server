@@ -16,14 +16,16 @@ export class AuthController {
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(
-    @Request() req,
-  ): Promise<{ access_token: string; userId: string; email: string }> {
+  async login(@Request() req): Promise<{
+    access_token: string;
+    userId: string;
+    email: string;
+    username: string;
+  }> {
     try {
-      const { access_token, userId, email } = await this.authService.login(
-        req.body,
-      );
-      return { access_token, userId, email };
+      const { access_token, userId, email, username } =
+        await this.authService.login(req.body);
+      return { access_token, userId, email, username };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
     }
