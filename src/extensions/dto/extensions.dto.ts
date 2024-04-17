@@ -43,6 +43,9 @@ export class MangaExtensionDTO {
   @Field()
   cover: string;
 
+  @Field({ nullable: true })
+  latestUploadedChapter?: string;
+
   @Field(() => [TagDTO])
   tags: TagDTO[];
 }

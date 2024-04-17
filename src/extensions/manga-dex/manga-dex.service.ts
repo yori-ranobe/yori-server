@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { Observable, forkJoin } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { Observable, forkJoin, from } from 'rxjs';
+import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
 import {
   ChapterDTO,
   MangaExtensionDTO,
@@ -60,6 +60,7 @@ export class MangaDexService {
       year: item.attributes.year,
       cover: cover,
       tags: tagsDTO,
+      latestUploadedChapter: item.attributes.latestUploadedChapter || '',
     };
   }
 
@@ -87,8 +88,34 @@ export class MangaDexService {
     options: GetMangaDexMangaListInputType,
   ): Observable<MangaExtensionDTO[]> {
     return this.makeRequest('/manga?includes[]=cover_art', options).pipe(
-      map((response) => {
-        return response.data.data.map((item) => this.mapMangaItemToDTO(item));
+      mergeMap((response) => {
+        const mangaList: MangaExtensionDTO[] = response.data.data.map((item) =>
+          this.mapMangaItemToDTO(item),
+        );
+        const chapterRequestsIds = mangaList
+          .filter((manga) => manga.latestUploadedChapter)
+          .map((manga) => manga.latestUploadedChapter);
+
+        if (chapterRequestsIds.length === 0) {
+          return from([mangaList]);
+        }
+
+        const chapterRequests = chapterRequestsIds.map((chapterRequestId) =>
+          this.makeRequest(`/chapter/${chapterRequestId}`, {}).pipe(
+            map(
+              (chapterResponse) => chapterResponse.data.data.attributes.chapter,
+            ),
+          ),
+        );
+
+        return forkJoin(chapterRequests).pipe(
+          map((chapters) => {
+            mangaList.forEach((manga, index) => {
+              manga.latestUploadedChapter = chapters[index];
+            });
+            return mangaList;
+          }),
+        );
       }),
     );
   }
