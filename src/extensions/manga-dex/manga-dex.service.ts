@@ -14,6 +14,7 @@ import {
   GetMangaDexMangaByIdInputType,
   SearchMangaDexMangaInputType,
   GetMangaDexChapterImagesInputType,
+  GetMangaDexChaptersInputType,
 } from './dto/manga-dex.dto';
 import { EXTENSIONS } from '../../config';
 
@@ -289,7 +290,7 @@ export class MangaDexService {
 
   private mapChaptersResponseToDTO(chaptersData: any[]): ChapterDTO[] {
     const chaptersWithEnLanguage = chaptersData.filter(
-      (chapterData: any) => chapterData.attributes.translatedLanguage === 'en',
+      (chapterData: any) => chapterData.attributes?.translatedLanguage === 'en',
     );
     return chaptersWithEnLanguage.map((chapterData: any) =>
       this.mapChapterItemToDTO(chapterData),
@@ -357,6 +358,38 @@ export class MangaDexService {
     return tagIDs
       .filter((tagID) => tagNames.includes(tagID.attributes.name.en))
       .map((tag) => tag.id);
+  }
+
+  // *** GET CHAPTERS LIST ***
+
+  getChaptersList(
+    options: GetMangaDexChaptersInputType,
+  ): Observable<{ chapters: ChapterDTO[]; total: number }> {
+    const order = {
+      volume: 'desc',
+      chapter: 'desc',
+    };
+
+    const params = {
+      ...(options.limit && { limit: options.limit }),
+      ...(options.offset && { offset: options.offset }),
+      ...(options.translatedLanguage && {
+        translatedLanguage: options.translatedLanguage,
+      }),
+      order: order,
+    };
+
+    const url = `/manga/${options.mangaId}/feed`;
+
+    return this.makeRequest(url, params).pipe(
+      map((response) => {
+        const chapters: ChapterDTO[] = response.data.data.map((chapter) =>
+          this.mapChapterItemToDTO(chapter),
+        );
+        const total: number = response.data.total;
+        return { chapters, total };
+      }),
+    );
   }
 
   // *** GET CHAPTER IMAGES ***

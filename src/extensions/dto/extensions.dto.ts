@@ -173,6 +173,33 @@ export class SearchMangaInputType extends GetMangaListInputType {
   excludedTags?: string[];
 }
 
+@ObjectType()
+export class ChaptersListResponse {
+  @Field(() => [ChapterDTO])
+  chapters: ChapterDTO[];
+
+  @Field(() => Number)
+  total: number;
+}
+
+@InputType()
+export class GetMangaChaptersInputType {
+  @Field()
+  extension: string;
+
+  @Field({ nullable: true })
+  limit?: number;
+
+  @Field({ nullable: true })
+  offset?: number;
+
+  @Field()
+  mangaId: string;
+
+  @Field(() => [String])
+  translatedLanguage: string[];
+}
+
 @InputType()
 export class GetChapterImagesInputType {
   @Field()

@@ -7,6 +7,7 @@ import {
   SearchMangaInputType,
   GetChapterImagesInputType,
   ChapterImagesDTO,
+  GetMangaChaptersInputType,
 } from './dto/extensions.dto';
 import { MangaDexService } from './manga-dex/manga-dex.service';
 import { MangaExtensionDTO } from './dto/extensions.dto';
@@ -50,6 +51,16 @@ export class ExtensionsService {
       return this.mangaDexService.searchManga(searchOptions);
     }
     return this.mangaDexService.searchManga(searchOptions);
+  }
+
+  getChaptersList(
+    options: GetMangaChaptersInputType,
+  ): Observable<{ chapters: ChapterDTO[]; total: number }> {
+    const { extension, ...fetchMangaOptions } = options;
+    if (extension === 'MangaDex') {
+      return this.mangaDexService.getChaptersList(fetchMangaOptions);
+    }
+    return this.mangaDexService.getChaptersList(fetchMangaOptions);
   }
 
   getChapterImages(

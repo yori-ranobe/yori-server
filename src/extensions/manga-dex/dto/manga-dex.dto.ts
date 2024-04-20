@@ -2,6 +2,7 @@ import { Field, InputType, OmitType } from '@nestjs/graphql';
 import {
   GetMangaByIdInputType,
   GetChapterImagesInputType,
+  GetMangaChaptersInputType,
   MangaOrderOptionsInput,
   SearchMangaInputType,
 } from '../../dto/extensions.dto';
@@ -24,6 +25,12 @@ export class GetMangaDexMangaListInputType {
 @InputType()
 export class GetMangaDexMangaByIdInputType extends OmitType(
   GetMangaByIdInputType,
+  ['extension'],
+) {}
+
+@InputType()
+export class GetMangaDexChaptersInputType extends OmitType(
+  GetMangaChaptersInputType,
   ['extension'],
 ) {}
 
