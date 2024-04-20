@@ -32,7 +32,13 @@ export class MangaExtensionDTO {
   title: string;
 
   @Field()
-  type: string;
+  cover: string;
+
+  @Field(() => [String], { nullable: true })
+  altTitles?: string[];
+
+  @Field({ nullable: true })
+  type?: string;
 
   @Field({ nullable: true })
   description?: string;
@@ -40,14 +46,23 @@ export class MangaExtensionDTO {
   @Field({ nullable: true })
   year?: number;
 
-  @Field()
-  cover: string;
+  @Field({ nullable: true })
+  status?: string;
+
+  @Field({ nullable: true })
+  contentRating?: string;
+
+  @Field({ nullable: true })
+  originalLanguage?: string;
 
   @Field({ nullable: true })
   latestUploadedChapter?: string;
 
-  @Field(() => [TagDTO])
-  tags: TagDTO[];
+  @Field(() => [TagDTO], { nullable: true })
+  tags?: TagDTO[];
+
+  @Field(() => [MangaExtensionDTO], { nullable: true })
+  related?: MangaExtensionDTO[];
 }
 
 @ObjectType()
@@ -125,10 +140,13 @@ export class GetMangaListInputType {
   extension: string;
 
   @Field({ nullable: true })
-  limit: number;
+  limit?: number;
 
   @Field({ nullable: true })
-  offset: number;
+  offset?: number;
+
+  @Field({ nullable: true })
+  title?: string;
 
   @Field(() => MangaOrderOptionsInput, { nullable: true })
   order?: MangaOrderOptionsInput;
@@ -146,16 +164,13 @@ export class GetMangaByIdInputType {
 @InputType()
 export class SearchMangaInputType extends GetMangaListInputType {
   @Field({ nullable: true })
-  title: string;
-
-  @Field({ nullable: true })
-  year: number;
+  year?: number;
 
   @Field(() => [String], { nullable: true })
-  includedTags: string[];
+  includedTags?: string[];
 
   @Field(() => [String], { nullable: true })
-  excludedTags: string[];
+  excludedTags?: string[];
 }
 
 @InputType()

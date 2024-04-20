@@ -17,10 +17,17 @@ export class ExtensionsResolver {
   constructor(private readonly extensionsService: ExtensionsService) {}
 
   @Query(() => [MangaExtensionDTO])
-  fetchMangaList(
+  fetchManga(
     @Args('GetMangaListInputType') options: GetMangaListInputType,
   ): Observable<MangaExtensionDTO[]> {
-    return this.extensionsService.fetchMangaList(options);
+    return this.extensionsService.fetchManga(options);
+  }
+
+  @Query(() => MangaExtensionDTO)
+  fetchMangaByTitle(
+    @Args('GetMangaListInputType') options: GetMangaListInputType,
+  ): Observable<MangaExtensionDTO> {
+    return this.extensionsService.fetchMangaByTitle(options);
   }
 
   @Query(() => ExtendedMangaDTO)

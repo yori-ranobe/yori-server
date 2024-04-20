@@ -15,14 +15,22 @@ import { MangaExtensionDTO } from './dto/extensions.dto';
 export class ExtensionsService {
   constructor(private readonly mangaDexService: MangaDexService) {}
 
-  fetchMangaList(
-    options: GetMangaListInputType,
-  ): Observable<MangaExtensionDTO[]> {
+  fetchManga(options: GetMangaListInputType): Observable<MangaExtensionDTO[]> {
     const { extension, ...fetchMangaOptions } = options;
     if (extension === 'MangaDex') {
-      return this.mangaDexService.fetchMangaList(fetchMangaOptions);
+      return this.mangaDexService.fetchManga(fetchMangaOptions);
     }
-    return this.mangaDexService.fetchMangaList(fetchMangaOptions);
+    return this.mangaDexService.fetchManga(fetchMangaOptions);
+  }
+
+  fetchMangaByTitle(
+    options: GetMangaListInputType,
+  ): Observable<MangaExtensionDTO> {
+    const { extension, ...fetchMangaOptions } = options;
+    if (extension === 'MangaDex') {
+      return this.mangaDexService.fetchMangaByTitle(fetchMangaOptions);
+    }
+    return this.mangaDexService.fetchMangaByTitle(fetchMangaOptions);
   }
 
   getMangaById(

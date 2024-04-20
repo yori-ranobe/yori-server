@@ -3,15 +3,19 @@ import {
   GetMangaByIdInputType,
   GetChapterImagesInputType,
   MangaOrderOptionsInput,
+  SearchMangaInputType,
 } from '../../dto/extensions.dto';
 
 @InputType()
 export class GetMangaDexMangaListInputType {
   @Field({ nullable: true })
-  limit: number;
+  limit?: number;
 
   @Field({ nullable: true })
-  offset: number;
+  offset?: number;
+
+  @Field({ nullable: true })
+  title?: string;
 
   @Field(() => MangaOrderOptionsInput, { nullable: true })
   order?: MangaOrderOptionsInput;
@@ -24,19 +28,10 @@ export class GetMangaDexMangaByIdInputType extends OmitType(
 ) {}
 
 @InputType()
-export class SearchMangaDexMangaInputType extends GetMangaDexMangaListInputType {
-  @Field({ nullable: true })
-  title: string;
-
-  @Field({ nullable: true })
-  year: number;
-
-  @Field(() => [String], { nullable: true })
-  includedTags: string[];
-
-  @Field(() => [String], { nullable: true })
-  excludedTags: string[];
-}
+export class SearchMangaDexMangaInputType extends OmitType(
+  SearchMangaInputType,
+  ['extension'],
+) {}
 
 @InputType()
 export class GetMangaDexChapterImagesInputType extends OmitType(

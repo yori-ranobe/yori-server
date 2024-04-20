@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { Observable, forkJoin, from } from 'rxjs';
+import { Observable, forkJoin, from, of } from 'rxjs';
 import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
 import {
   ChapterDTO,
@@ -27,40 +27,101 @@ export class MangaDexService {
   }
 
   private makeRequest(endpoint: string, options: any): Observable<any> {
-    this.setUserAgentHeader();
-    const apiUrl = `${EXTENSIONS.mangaDex.apiUrl}${endpoint}`;
-    return this.httpService.get(apiUrl, { params: options });
+    try {
+      this.setUserAgentHeader();
+      const apiUrl = `${EXTENSIONS.mangaDex.apiUrl}${endpoint}`;
+      return this.httpService.get(apiUrl, { params: options });
+    } catch (error) {
+      console.error(error);
+    }
   }
 
-  private extractCoverFileName(item: any): string {
-    const coverRelationship = item.relationships.find(
+  private generateFileUrl(mangaId: string, fileName: string): string {
+    return `${EXTENSIONS.mangaDex.filesApi}/covers/${mangaId}/${fileName}`;
+  }
+
+  private extractCoverFile(item: any): string {
+    const coverRelationship = item.relationships?.find(
       (rel) => rel.type === 'cover_art',
     );
 
     if (!coverRelationship || !coverRelationship.attributes.fileName) {
-      throw new NotFoundException('Cover art not found or missing file name');
+      return item.id;
     }
 
-    return coverRelationship.attributes.fileName;
+    return this.generateFileUrl(item.id, coverRelationship.attributes.fileName);
+  }
+
+  private getTitle(title: any): string {
+    return title?.en || Object.values(title)[0] || '';
+  }
+
+  private getAltTitles(altTitles: any[]): string[] | null {
+    if (!altTitles) return null;
+
+    return altTitles.map((titleObj: any) => {
+      const value = Object.values(titleObj)[0];
+      return typeof value === 'string' ? value : '';
+    });
+  }
+
+  private getDescription(description: any): string {
+    return description?.en || Object.values(description)[0] || '';
+  }
+
+  private mapMangaShortItemToDTO(item: any): MangaExtensionDTO | null {
+    if (!item || !item.id || !item.attributes || !item.attributes.title) {
+      return;
+    }
+
+    const attributes = item.attributes;
+    const id = item.id;
+
+    const cover = this.extractCoverFile(item);
+    const title = this.getTitle(attributes.title);
+    const latestUploadedChapter = attributes.latestUploadedChapter;
+
+    return { id, title, cover, latestUploadedChapter };
   }
 
   private mapMangaItemToDTO(item: any): MangaExtensionDTO {
-    const coverFileName = this.extractCoverFileName(item);
-    const cover = `${EXTENSIONS.mangaDex.filesApi}/covers/${item.id}/${coverFileName}`;
-    const tagsDTO = item.attributes.tags.map((tag) => this.mapTagToDTO(tag));
+    const attributes = item.attributes;
+    const id = item.id;
+    const type = attributes.type;
+
+    const cover = this.extractCoverFile(item);
+    const tagsDTO = attributes.tags.map((tag: any) => this.mapTagToDTO(tag));
+
+    const title = this.getTitle(attributes.title);
+    const altTitles = this.getAltTitles(attributes.altTitles);
+    const description = this.getDescription(attributes.description);
+    const status = attributes.status || 'ongoing';
+    const contentRating = attributes.contentRating || 'safe';
+    const originalLanguage = attributes.originalLanguage || '';
+
+    const related =
+      item.relationships
+        ?.filter(
+          (relationship) =>
+            relationship.type === 'manga' && relationship.related,
+        )
+        ?.map((relationship) => this.mapMangaShortItemToDTO(relationship)) ||
+      [];
 
     return {
-      id: item.id,
-      type: item.type,
-      title: item.attributes.title?.en || item.attributes.title['ja-ro'] || '',
-      description:
-        item.attributes.description?.en ||
-        item.attributes.description['ja-ro'] ||
-        '',
-      year: item.attributes.year,
-      cover: cover,
+      id,
+      title,
+      altTitles,
+      description,
+      cover,
+      type,
+      year: attributes.year,
+      status,
+      contentRating,
+      originalLanguage,
       tags: tagsDTO,
-      latestUploadedChapter: item.attributes.latestUploadedChapter || '',
+      related: related,
+      latestUploadedChapter: attributes.latestUploadedChapter || '',
     };
   }
 
@@ -82,16 +143,93 @@ export class MangaDexService {
     };
   }
 
+  // *** GET MANGA BY TITLE ***
+
+  fetchMangaByTitle(
+    options: GetMangaDexMangaListInputType,
+  ): Observable<MangaExtensionDTO> {
+    const params = {
+      ...(options.limit && { limit: options.limit }),
+      ...(options.offset && { offset: options.offset }),
+      ...(options.title && { title: options.title }),
+      includes: ['cover_art', 'manga'],
+    };
+
+    return this.makeRequest('/manga', params).pipe(
+      mergeMap((response) => {
+        const manga: MangaExtensionDTO = response.data.data.map((item) =>
+          this.mapMangaItemToDTO(item),
+        )[0];
+
+        const relatedMangaIds: string[] = [
+          ...new Set(
+            (manga.related || []).map(
+              (relatedManga: MangaExtensionDTO) => relatedManga?.id,
+            ),
+          ),
+        ]?.filter((id) => id);
+
+        const coverParams = {
+          ...(options.limit && { limit: options.limit }),
+          manga: relatedMangaIds,
+        };
+
+        const coverRequest: Observable<any> = this.makeRequest(
+          '/cover',
+          coverParams,
+        );
+
+        return forkJoin([coverRequest]).pipe(
+          switchMap(([coverResponses]) => {
+            const covers = coverResponses.data.data.map(
+              (coverResponse: any) => {
+                const mangaRelationship = coverResponse.relationships.find(
+                  (relationship: any) => relationship.type === 'manga',
+                );
+
+                return {
+                  id: mangaRelationship.id || '',
+                  fileName: coverResponse.attributes.fileName || '',
+                };
+              },
+            );
+            manga.related?.forEach((relatedManga: MangaExtensionDTO) => {
+              const cover = covers.find(
+                (cover: { id: string }) => cover.id === relatedManga.id,
+              );
+              if (cover) {
+                relatedManga.cover = this.generateFileUrl(
+                  relatedManga.id,
+                  cover.fileName,
+                );
+              }
+            });
+
+            return of(manga);
+          }),
+        );
+      }),
+    );
+  }
+
   // *** GET MANGA LIST ***
 
-  fetchMangaList(
+  fetchManga(
     options: GetMangaDexMangaListInputType,
   ): Observable<MangaExtensionDTO[]> {
-    return this.makeRequest('/manga?includes[]=cover_art', options).pipe(
+    const params = {
+      ...(options.limit && { limit: options.limit }),
+      ...(options.offset && { offset: options.offset }),
+      ...(options.order && { order: options.order }),
+      includes: ['cover_art'],
+    };
+
+    return this.makeRequest('/manga', params).pipe(
       mergeMap((response) => {
         const mangaList: MangaExtensionDTO[] = response.data.data.map((item) =>
-          this.mapMangaItemToDTO(item),
+          this.mapMangaShortItemToDTO(item),
         );
+
         const chapterRequestsIds = mangaList
           .filter((manga) => manga.latestUploadedChapter)
           .map((manga) => manga.latestUploadedChapter);
@@ -109,11 +247,12 @@ export class MangaDexService {
         );
 
         return forkJoin(chapterRequests).pipe(
-          map((chapters) => {
-            mangaList.forEach((manga, index) => {
+          switchMap((chapters: any[]) => {
+            mangaList.forEach((manga: MangaExtensionDTO, index: number) => {
               manga.latestUploadedChapter = chapters[index];
             });
-            return mangaList;
+
+            return of(mangaList);
           }),
         );
       }),
