@@ -88,7 +88,7 @@ export class MangaDexService {
   private mapMangaItemToDTO(item: any): MangaExtensionDTO {
     const attributes = item.attributes;
     const id = item.id;
-    const type = attributes.type;
+    const type = item.type;
 
     const cover = this.extractCoverFile(item);
     const tagsDTO = attributes.tags.map((tag: any) => this.mapTagToDTO(tag));
@@ -98,7 +98,16 @@ export class MangaDexService {
     const description = this.getDescription(attributes.description);
     const status = attributes.status || 'ongoing';
     const contentRating = attributes.contentRating || 'safe';
+    const state = attributes.state || 'published';
     const originalLanguage = attributes.originalLanguage || '';
+
+    const author: string[] = item.relationships
+      .filter((relationship) => relationship.type === 'author')
+      .map((relationship) => relationship.attributes.name);
+
+    const artist: string[] = item.relationships
+      .filter((relationship) => relationship.type === 'artist')
+      .map((relationship) => relationship.attributes.name);
 
     const related =
       item.relationships
@@ -118,6 +127,9 @@ export class MangaDexService {
       type,
       year: attributes.year,
       status,
+      state,
+      author,
+      artist,
       contentRating,
       originalLanguage,
       tags: tagsDTO,
@@ -140,7 +152,6 @@ export class MangaDexService {
       id: tag.id,
       type: tag.type,
       name: tag.attributes.name.en || '',
-      group: tag.attributes.group || '',
     };
   }
 
@@ -153,7 +164,7 @@ export class MangaDexService {
       ...(options.limit && { limit: options.limit }),
       ...(options.offset && { offset: options.offset }),
       ...(options.title && { title: options.title }),
-      includes: ['cover_art', 'manga'],
+      includes: ['cover_art', 'manga', 'author', 'artist'],
     };
 
     return this.makeRequest('/manga', params).pipe(

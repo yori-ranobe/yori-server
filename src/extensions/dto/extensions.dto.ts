@@ -50,6 +50,15 @@ export class MangaExtensionDTO {
   status?: string;
 
   @Field({ nullable: true })
+  state?: string;
+
+  @Field(() => [String], { nullable: true })
+  author?: string[];
+
+  @Field(() => [String], { nullable: true })
+  artist?: string[];
+
+  @Field({ nullable: true })
   contentRating?: string;
 
   @Field({ nullable: true })
@@ -99,9 +108,6 @@ export class TagDTO {
 
   @Field()
   name: string;
-
-  @Field()
-  group: string;
 }
 
 @ObjectType()
@@ -187,11 +193,11 @@ export class GetMangaChaptersInputType {
   @Field()
   extension: string;
 
-  @Field({ nullable: true })
-  limit?: number;
+  @Field()
+  limit: number;
 
-  @Field({ nullable: true })
-  offset?: number;
+  @Field()
+  offset: number;
 
   @Field()
   mangaId: string;
