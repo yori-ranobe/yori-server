@@ -17,6 +17,7 @@ import {
   GetMangaDexChaptersInputType,
 } from './dto/manga-dex.dto';
 import { EXTENSIONS } from '../../config';
+import { formatDate } from 'src/utils/time';
 
 @Injectable()
 export class MangaDexService {
@@ -144,6 +145,7 @@ export class MangaDexService {
       volume: chapterData.attributes.volume ?? null,
       chapter: chapterData.attributes.chapter,
       publishAt: new Date(chapterData.attributes.publishAt),
+      createdAt: formatDate(chapterData.attributes.createdAt),
     };
   }
 

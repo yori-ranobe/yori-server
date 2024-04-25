@@ -87,6 +87,9 @@ export class ChapterDTO {
 
   @Field()
   publishAt: Date;
+
+  @Field()
+  createdAt: string;
 }
 
 @ObjectType()
