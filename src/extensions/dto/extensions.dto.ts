@@ -5,7 +5,7 @@ import {
   registerEnumType,
 } from '@nestjs/graphql';
 
-export enum MangaOrderEnum {
+export enum OrderEnum {
   ASC = 'asc',
   DESC = 'desc',
 }
@@ -15,8 +15,8 @@ export enum ImagesTypeEnum {
   COMPRESSED = 'COMPRESSED',
 }
 
-registerEnumType(MangaOrderEnum, {
-  name: 'MangaOrderEnum',
+registerEnumType(OrderEnum, {
+  name: 'OrderEnum',
 });
 
 registerEnumType(ImagesTypeEnum, {
@@ -121,26 +121,26 @@ export class ChapterImagesDTO {
 
 @InputType()
 export class MangaOrderOptionsInput {
-  @Field(() => MangaOrderEnum, { nullable: true })
-  title?: MangaOrderEnum;
+  @Field(() => OrderEnum, { nullable: true })
+  title?: OrderEnum;
 
-  @Field(() => MangaOrderEnum, { nullable: true })
-  year?: MangaOrderEnum;
+  @Field(() => OrderEnum, { nullable: true })
+  year?: OrderEnum;
 
-  @Field(() => MangaOrderEnum, { nullable: true })
-  createdAt?: MangaOrderEnum;
+  @Field(() => OrderEnum, { nullable: true })
+  createdAt?: OrderEnum;
 
-  @Field(() => MangaOrderEnum, { nullable: true })
-  updatedAt?: MangaOrderEnum;
+  @Field(() => OrderEnum, { nullable: true })
+  updatedAt?: OrderEnum;
 
-  @Field(() => MangaOrderEnum, { nullable: true })
-  latestUploadedChapter?: MangaOrderEnum;
+  @Field(() => OrderEnum, { nullable: true })
+  latestUploadedChapter?: OrderEnum;
 
-  @Field(() => MangaOrderEnum, { nullable: true })
-  followedCount?: MangaOrderEnum;
+  @Field(() => OrderEnum, { nullable: true })
+  followedCount?: OrderEnum;
 
-  @Field(() => MangaOrderEnum, { nullable: true })
-  relevance?: MangaOrderEnum;
+  @Field(() => OrderEnum, { nullable: true })
+  relevance?: OrderEnum;
 }
 
 @InputType()
@@ -204,6 +204,9 @@ export class GetMangaChaptersInputType {
 
   @Field()
   mangaId: string;
+
+  @Field(() => OrderEnum, { nullable: true })
+  order?: OrderEnum;
 
   @Field(() => [String])
   translatedLanguage: string[];

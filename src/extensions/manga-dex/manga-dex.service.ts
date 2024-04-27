@@ -162,8 +162,11 @@ export class MangaDexService {
   fetchMangaByTitle(
     options: GetMangaDexMangaListInputType,
   ): Observable<MangaExtensionDTO> {
+    const optionsTitle = options.title
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+
     const params = {
-      ...(options.limit && { limit: options.limit }),
       ...(options.offset && { offset: options.offset }),
       ...(options.title && { title: options.title }),
       includes: ['cover_art', 'manga', 'author', 'artist'],
@@ -171,13 +174,21 @@ export class MangaDexService {
 
     return this.makeRequest('/manga', params).pipe(
       mergeMap((response) => {
-        const manga: MangaExtensionDTO = response.data.data.map((item) =>
-          this.mapMangaItemToDTO(item),
-        )[0];
+        const possibleMangas = response.data.data;
+        const manga = possibleMangas.find((item) => {
+          const titles = Object.values(item.attributes.title);
+
+          return titles.some(
+            (title) =>
+              (title as string).toLowerCase() === optionsTitle.toLowerCase(),
+          );
+        });
+
+        const mappedManga: MangaExtensionDTO = this.mapMangaItemToDTO(manga);
 
         const relatedMangaIds: string[] = [
           ...new Set(
-            (manga.related || []).map(
+            (mappedManga.related || []).map(
               (relatedManga: MangaExtensionDTO) => relatedManga?.id,
             ),
           ),
@@ -197,7 +208,7 @@ export class MangaDexService {
           switchMap(([coverResponses]) => {
             const covers = coverResponses.data.data.map(
               (coverResponse: any) => {
-                const mangaRelationship = coverResponse.relationships.find(
+                const mangaRelationship = coverResponse.relationships?.find(
                   (relationship: any) => relationship.type === 'manga',
                 );
 
@@ -207,8 +218,8 @@ export class MangaDexService {
                 };
               },
             );
-            manga.related?.forEach((relatedManga: MangaExtensionDTO) => {
-              const cover = covers.find(
+            mappedManga.related?.forEach((relatedManga: MangaExtensionDTO) => {
+              const cover = covers?.find(
                 (cover: { id: string }) => cover.id === relatedManga.id,
               );
               if (cover) {
@@ -219,7 +230,7 @@ export class MangaDexService {
               }
             });
 
-            return of(manga);
+            return of(mappedManga);
           }),
         );
       }),
@@ -379,8 +390,8 @@ export class MangaDexService {
     options: GetMangaDexChaptersInputType,
   ): Observable<{ chapters: ChapterDTO[]; total: number }> {
     const order = {
-      volume: 'desc',
-      chapter: 'desc',
+      volume: options.order || 'desc',
+      chapter: options.order || 'desc',
     };
 
     const params = {
