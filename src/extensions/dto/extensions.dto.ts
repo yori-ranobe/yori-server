@@ -70,8 +70,20 @@ export class MangaExtensionDTO {
   @Field(() => [TagDTO], { nullable: true })
   tags?: TagDTO[];
 
-  @Field(() => [MangaExtensionDTO], { nullable: true })
-  related?: MangaExtensionDTO[];
+  @Field(() => [RelatedMangaDTO], { nullable: true })
+  related?: RelatedMangaDTO[];
+}
+
+@ObjectType()
+export class RelatedMangaDTO {
+  @Field()
+  id: string;
+
+  @Field()
+  title: string;
+
+  @Field()
+  cover: string;
 }
 
 @ObjectType()

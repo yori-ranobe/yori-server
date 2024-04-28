@@ -8,6 +8,7 @@ import {
   TagDTO,
   ChapterImagesDTO,
   ImagesTypeEnum,
+  RelatedMangaDTO,
 } from '../dto/extensions.dto';
 import {
   GetMangaDexMangaListInputType,
@@ -189,7 +190,7 @@ export class MangaDexService {
         const relatedMangaIds: string[] = [
           ...new Set(
             (mappedManga.related || []).map(
-              (relatedManga: MangaExtensionDTO) => relatedManga?.id,
+              (relatedManga: RelatedMangaDTO) => relatedManga?.id,
             ),
           ),
         ]?.filter((id) => id);
@@ -390,8 +391,8 @@ export class MangaDexService {
     options: GetMangaDexChaptersInputType,
   ): Observable<{ chapters: ChapterDTO[]; total: number }> {
     const order = {
-      volume: options.order || 'desc',
-      chapter: options.order || 'desc',
+      volume: options.order,
+      chapter: options.order,
     };
 
     const params = {
