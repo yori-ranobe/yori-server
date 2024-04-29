@@ -176,13 +176,23 @@ export class MangaDexService {
     return this.makeRequest('/manga', params).pipe(
       mergeMap((response) => {
         const possibleMangas = response.data.data;
-        const manga = possibleMangas.find((item) => {
-          const titles = Object.values(item.attributes.title);
+        const sanitizeTitle = (title: string) =>
+          title
+            .replace(/[^a-zA-Z0-9\s]/g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .toLowerCase();
 
-          return titles.some(
-            (title) =>
-              (title as string).toLowerCase() === optionsTitle.toLowerCase(),
-          );
+        const manga = possibleMangas.find((item) => {
+          if (item && item.attributes) {
+            const titles = Object.values(item.attributes.title).map((title) =>
+              sanitizeTitle(title as string),
+            );
+
+            const sanitizedInputTitle = sanitizeTitle(optionsTitle);
+
+            return titles.some((title) => title === sanitizedInputTitle);
+          }
         });
 
         const mappedManga: MangaExtensionDTO = this.mapMangaItemToDTO(manga);
